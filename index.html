@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>AI 聊天平台</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+    #chatBox { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; }
+    #userInput { width: 80%; padding: 5px; }
+    #sendBtn { padding: 5px 10px; }
+    .message { margin: 5px 0; }
+    .user { text-align: right; color: blue; }
+    .ai { text-align: left; color: green; }
+  </style>
+</head>
+<body>
+
+  <h2>AI 聊天平台</h2>
+  <div id="chatBox"></div>
+  <input type="text" id="userInput" placeholder="請輸入問題..." />
+  <button id="sendBtn">送出</button>
+
+  <script>
+    const webhookURL = "https://hook.make.com/你的-webhook-id"; // << 替換成你自己的 webhook URL
+
+    document.getElementById("sendBtn").addEventListener("click", async () => {
+      const question = document.getElementById("userInput").value;
+      if (!question) return;
+
+      appendMessage("你：" + question, "user");
+
+      // 傳送到 Make webhook
+      const response = await fetch(webhookURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: question, user_id: "web-user" })
+      });
+
+      const result = await response.json();
+      appendMessage("AI：" + result.answer, "ai");
+
+      document.getElementById("userInput").value = "";
+    });
+
+    function appendMessage(text, type) {
+      const msg = document.createElement("div");
+      msg.className = `message ${type}`;
+      msg.textContent = text;
+      document.getElementById("chatBox").appendChild(msg);
+      document.getElementById("chatBox").scrollTop = document.getElementById("chatBox").scrollHeight;
+    }
+  </script>
+
+</body>
+</html>

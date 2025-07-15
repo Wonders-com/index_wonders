@@ -46,26 +46,14 @@
       margin-top: 15px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
-    .timestamp {
-      font-size: 0.85em;
-      color: #888;
-      text-align: right;
-    }
     .question {
       font-weight: bold;
       color: #1565c0;
-      margin-top: 5px;
     }
     .answer {
       margin-top: 8px;
       white-space: pre-wrap;
       color: #2e7d32;
-    }
-    .btn-group {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-      justify-content: center;
     }
   </style>
 </head>
@@ -73,11 +61,7 @@
   <h1>Wondes AI 問答平台</h1>
   <label for="question">請輸入問題：</label><br/>
   <textarea id="question" placeholder="例如：益生菌有什麼功效？"></textarea><br/>
-  <div class="btn-group">
-    <button onclick="askQuestion()">送出</button>
-    <button onclick="exportCSV()">匯出 CSV</button>
-    <button onclick="exportTXT()">匯出 TXT</button>
-  </div>
+  <button onclick="askQuestion()">送出</button>
 
   <div id="chatHistory"></div>
 
@@ -85,21 +69,9 @@
     const apiURL = "https://wonders-ai.resource-a2e.workers.dev/";
     const chatHistoryDiv = document.getElementById("chatHistory");
 
-    function getTaiwanTime() {
-      const now = new Date();
-      return new Date(now.getTime() + (8 * 60 * 60 * 1000)).toLocaleString('zh-TW', {
-        timeZone: 'Asia/Taipei',
-        hour12: false
-      });
-    }
-
-    function appendQA(question, answer, time) {
+    function appendQA(question, answer) {
       const block = document.createElement("div");
       block.className = "qa-block";
-
-      const timestamp = document.createElement("div");
-      timestamp.className = "timestamp";
-      timestamp.textContent = "🕒 " + (time || getTaiwanTime());
 
       const q = document.createElement("div");
       q.className = "question";
@@ -109,23 +81,21 @@
       a.className = "answer";
       a.textContent = "🤖 AI：" + answer;
 
-      block.appendChild(timestamp);
       block.appendChild(q);
       block.appendChild(a);
       chatHistoryDiv.appendChild(block);
     }
 
     function saveToLocal(question, answer) {
-      const time = getTaiwanTime();
       let history = JSON.parse(localStorage.getItem("chatHistory")) || [];
-      history.push({ q: question, a: answer, time });
+      history.push({ q: question, a: answer, time: new Date().toISOString() });
       localStorage.setItem("chatHistory", JSON.stringify(history));
     }
 
     function loadHistory() {
       const history = JSON.parse(localStorage.getItem("chatHistory")) || [];
       history.forEach(item => {
-        appendQA(item.q, item.a, item.time);
+        appendQA(item.q, item.a);
       });
     }
 
@@ -147,7 +117,7 @@
         const data = await response.json();
         const answer = data.answer || "⚠️ 無回應，請稍後再試。";
 
-        // 移除 loading
+        // 移除上一個 loading 區塊，重新加入實際回答
         chatHistoryDiv.lastChild.remove();
         appendQA(question, answer);
         saveToLocal(question, answer);
@@ -155,40 +125,6 @@
         chatHistoryDiv.lastChild.remove();
         appendQA(question, "❌ 發生錯誤：" + error.message);
       }
-    }
-
-    function exportCSV() {
-      const history = JSON.parse(localStorage.getItem("chatHistory")) || [];
-      if (!history.length) return alert("尚無問答紀錄");
-
-      const rows = [["時間", "問題", "回答"]];
-      history.forEach(item => {
-        rows.push([item.time, item.q, item.a]);
-      });
-
-      const csvContent = rows.map(e => e.map(x => `"${x.replace(/"/g, '""')}"`).join(",")).join("\n");
-      downloadFile(csvContent, "wondes_chat_history.csv", "text/csv");
-    }
-
-    function exportTXT() {
-      const history = JSON.parse(localStorage.getItem("chatHistory")) || [];
-      if (!history.length) return alert("尚無問答紀錄");
-
-      let txt = "";
-      history.forEach(item => {
-        txt += `🕒 ${item.time}\n👤 問題：${item.q}\n🤖 回答：${item.a}\n\n`;
-      });
-
-      downloadFile(txt, "wondes_chat_history.txt", "text/plain");
-    }
-
-    function downloadFile(content, filename, type) {
-      const blob = new Blob([content], { type });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(a.href);
     }
 
     window.onload = loadHistory;

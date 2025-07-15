@@ -3,39 +3,64 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wondes AI 聊天機器人</title>
+  <title>Wondes AI 問答平台</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 600px;
+      max-width: 720px;
       margin: 40px auto;
       padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
     }
     textarea {
       width: 100%;
       height: 100px;
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
     }
     button {
       padding: 10px 20px;
       margin-top: 10px;
       font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
     }
     .qa-container {
       margin-top: 30px;
     }
     .question, .answer {
-      padding: 12px;
+      padding: 14px;
       border-radius: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       white-space: pre-wrap;
     }
     .question {
-      background-color: #e0f7fa;
+      background-color: #e3f2fd;
     }
     .answer {
       background-color: #f1f8e9;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+    .history-title {
+      margin-top: 40px;
+      font-weight: bold;
+      font-size: 18px;
     }
   </style>
 </head>
@@ -47,20 +72,25 @@
 
   <div id="qa-list" class="qa-container"></div>
 
+  <h2 class="history-title">📜 對話歷史紀錄</h2>
+  <div id="history" class="qa-container"></div>
+
   <script>
+    let historyLog = [];
+
     async function askQuestion() {
       const questionText = document.getElementById("question").value.trim();
       if (!questionText) return;
 
       const qaList = document.getElementById("qa-list");
+      const historyDiv = document.getElementById("history");
+      qaList.innerHTML = ""; // 清除目前畫面
 
-      // 顯示使用者提問
       const questionDiv = document.createElement("div");
       questionDiv.className = "question";
       questionDiv.textContent = "👤 使用者提問：" + questionText;
       qaList.appendChild(questionDiv);
 
-      // 顯示等待回覆
       const answerDiv = document.createElement("div");
       answerDiv.className = "answer";
       answerDiv.textContent = "⌛ 請稍候...";
@@ -76,12 +106,35 @@
         });
 
         const data = await response.json();
-        answerDiv.textContent = "🤖 Gemini 回答：" + (data.answer || "⚠️ 無回應，請稍後再試。");
+        const answerText = data.answer || "⚠️ 無回應，請稍後再試。";
+        answerDiv.textContent = "🤖 Gemini 回答：" + answerText;
+
+        historyLog.push({ q: questionText, a: answerText });
+        updateHistory();
+
       } catch (error) {
         answerDiv.textContent = "❌ 發生錯誤：" + error.message;
       }
 
       document.getElementById("question").value = "";
+    }
+
+    function updateHistory() {
+      const historyDiv = document.getElementById("history");
+      historyDiv.innerHTML = "";
+
+      historyLog.slice().reverse().forEach(entry => {
+        const q = document.createElement("div");
+        q.className = "question";
+        q.textContent = "👤 " + entry.q;
+
+        const a = document.createElement("div");
+        a.className = "answer";
+        a.textContent = "🤖 " + entry.a;
+
+        historyDiv.appendChild(q);
+        historyDiv.appendChild(a);
+      });
     }
   </script>
 </body>

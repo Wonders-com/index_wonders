@@ -35,4 +35,54 @@
       background-color: #e0f7fa;
     }
     .answer {
-      background-color: #
+      background-color: #f1f8e9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wondes AI 問答平台</h1>
+  <label for="question">請輸入問題：</label><br/>
+  <textarea id="question" placeholder="例如：益生菌有什麼功效？"></textarea><br/>
+  <button onclick="askQuestion()">送出</button>
+
+  <div id="qa-list" class="qa-container"></div>
+
+  <script>
+    async function askQuestion() {
+      const questionText = document.getElementById("question").value.trim();
+      if (!questionText) return;
+
+      const qaList = document.getElementById("qa-list");
+
+      // 顯示使用者提問
+      const questionDiv = document.createElement("div");
+      questionDiv.className = "question";
+      questionDiv.textContent = "👤 使用者提問：" + questionText;
+      qaList.appendChild(questionDiv);
+
+      // 顯示等待回覆
+      const answerDiv = document.createElement("div");
+      answerDiv.className = "answer";
+      answerDiv.textContent = "⌛ 請稍候...";
+      qaList.appendChild(answerDiv);
+
+      try {
+        const response = await fetch("https://wonders-ai.resource-a2e.workers.dev/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ question: questionText })
+        });
+
+        const data = await response.json();
+        answerDiv.textContent = "🤖 Gemini 回答：" + (data.answer || "⚠️ 無回應，請稍後再試。");
+      } catch (error) {
+        answerDiv.textContent = "❌ 發生錯誤：" + error.message;
+      }
+
+      document.getElementById("question").value = "";
+    }
+  </script>
+</body>
+</html>

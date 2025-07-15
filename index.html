@@ -3,138 +3,126 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Wonders AI 問答平台</title>
+  <title>Wondes AI 問答平台</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 720px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 600px;
       margin: 40px auto;
       padding: 20px;
-      background-color: #f9f9f9;
+      background-color: #fefefe;
+      color: #333;
     }
     h1 {
-      text-align: center;
-      color: #333;
+      color: #222;
     }
     textarea {
       width: 100%;
       height: 100px;
-      padding: 12px;
+      padding: 10px;
       font-size: 16px;
-      border-radius: 6px;
+      margin-top: 10px;
       border: 1px solid #ccc;
+      border-radius: 4px;
       resize: vertical;
     }
     button {
       padding: 10px 20px;
-      margin-top: 10px;
       font-size: 16px;
-      background-color: #007bff;
-      color: white;
+      margin-top: 10px;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
+      background-color: #4CAF50;
+      color: white;
       cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #45a049;
     }
     .qa-container {
-      margin-top: 30px;
+      margin-top: 20px;
+      display: none; /* 預設隱藏 */
     }
     .question, .answer {
-      padding: 14px;
+      padding: 12px;
       border-radius: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       white-space: pre-wrap;
     }
     .question {
-      background-color: #e3f2fd;
+      background-color: #e1f5fe;
     }
     .answer {
       background-color: #f1f8e9;
     }
-    .error {
-      color: red;
-      margin-top: 10px;
+    .toggle-btn {
+      background-color: #2196F3;
+      margin-top: 20px;
     }
-    .history-title {
-      margin-top: 40px;
-      font-weight: bold;
-      font-size: 18px;
+    .toggle-btn:hover {
+      background-color: #0b7dda;
     }
   </style>
 </head>
 <body>
   <h1>Wondes AI 問答平台</h1>
+
   <label for="question">請輸入問題：</label><br/>
   <textarea id="question" placeholder="例如：益生菌有什麼功效？"></textarea><br/>
   <button onclick="askQuestion()">送出</button>
+  <button class="toggle-btn" onclick="toggleHistory()">顯示對話紀錄</button>
 
   <div id="qa-list" class="qa-container"></div>
 
-  <h2 class="history-title">📜 對話歷史紀錄</h2>
-  <div id="history" class="qa-container"></div>
-
   <script>
-    let historyLog = [];
+    let historyVisible = false;
+
+    function toggleHistory() {
+      const qaContainer = document.getElementById("qa-list");
+      const toggleBtn = document.querySelector(".toggle-btn");
+
+      historyVisible = !historyVisible;
+      qaContainer.style.display = historyVisible ? "block" : "none";
+      toggleBtn.textContent = historyVisible ? "隱藏對話紀錄" : "顯示對話紀錄";
+    }
 
     async function askQuestion() {
       const questionText = document.getElementById("question").value.trim();
       if (!questionText) return;
 
       const qaList = document.getElementById("qa-list");
-      const historyDiv = document.getElementById("history");
-      qaList.innerHTML = ""; // 清除目前畫面
 
+      // 顯示使用者提問
       const questionDiv = document.createElement("div");
       questionDiv.className = "question";
       questionDiv.textContent = "👤 使用者提問：" + questionText;
       qaList.appendChild(questionDiv);
 
+      // 顯示等待回覆
       const answerDiv = document.createElement("div");
       answerDiv.className = "answer";
       answerDiv.textContent = "⌛ 請稍候...";
       qaList.appendChild(answerDiv);
 
+      // 自動展開對話區
+      if (!historyVisible) toggleHistory();
+
       try {
         const response = await fetch("https://wonders-ai.resource-a2e.workers.dev/", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question: questionText })
         });
 
         const data = await response.json();
-        const answerText = data.answer || "⚠️ 無回應，請稍後再試。";
-        answerDiv.textContent = "🤖 Gemini 回答：" + answerText;
+        answerDiv.textContent = "🤖 Gemini 回答：" + (data.answer || "⚠️ 無回應，請稍後再試。");
 
-        historyLog.push({ q: questionText, a: answerText });
-        updateHistory();
-
+        // 可加上本地保存紀錄功能（如 localStorage）後續擴充
       } catch (error) {
         answerDiv.textContent = "❌ 發生錯誤：" + error.message;
       }
 
       document.getElementById("question").value = "";
-    }
-
-    function updateHistory() {
-      const historyDiv = document.getElementById("history");
-      historyDiv.innerHTML = "";
-
-      historyLog.slice().reverse().forEach(entry => {
-        const q = document.createElement("div");
-        q.className = "question";
-        q.textContent = "👤 " + entry.q;
-
-        const a = document.createElement("div");
-        a.className = "answer";
-        a.textContent = "🤖 " + entry.a;
-
-        historyDiv.appendChild(q);
-        historyDiv.appendChild(a);
-      });
     }
   </script>
 </body>

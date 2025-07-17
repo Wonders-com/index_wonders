@@ -115,7 +115,7 @@
         });
 
         const data = await response.json();
-        answerDiv.textContent = "🤖 Gemini 回答：" + (data.answer || "⚠️ 無回應，請稍後再試。");
+        answerDiv.textContent = "🤖 AI 回答：" + (data.answer || "⚠️ 無回應，請稍後再試。");
 
         // 可加上本地保存紀錄功能（如 localStorage）後續擴充
       } catch (error) {
